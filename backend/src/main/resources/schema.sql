@@ -1,0 +1,40 @@
+CREATE TABLE IF NOT EXISTS users (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    username VARCHAR(64) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    role VARCHAR(32) NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS conversations (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS messages (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    conversation_id BIGINT NOT NULL,
+    role VARCHAR(16) NOT NULL,
+    content TEXT NOT NULL,
+    model VARCHAR(64),
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS api_keys (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT NOT NULL,
+    provider VARCHAR(32) NOT NULL,
+    key_ciphertext TEXT NOT NULL,
+    key_fingerprint VARCHAR(64) NOT NULL,
+    key_last4 VARCHAR(8) NOT NULL,
+    version INT NOT NULL,
+    active BOOLEAN NOT NULL DEFAULT TRUE,
+    validated_at TIMESTAMP NULL,
+    rotated_at TIMESTAMP NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_user_provider_active (user_id, provider, active),
+    INDEX idx_user_provider_version (user_id, provider, version)
+);

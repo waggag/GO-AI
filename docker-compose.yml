@@ -1,0 +1,83 @@
+services:
+  mysql:
+    image: ${MYSQL_IMAGE:-mysql:8.0.39}
+    environment:
+      MYSQL_DATABASE: go_ai
+      MYSQL_USER: goai
+      MYSQL_PASSWORD: goai123
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_CHARSET: utf8mb4
+      MYSQL_COLLATION: utf8mb4_unicode_ci
+    ports:
+      - "3307:3306"
+    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: ${REDIS_IMAGE:-redis:7.4-alpine}
+    ports:
+      - "6380:6379"
+
+  zipkin:
+    image: ${ZIPKIN_IMAGE:-openzipkin/zipkin:3.4}
+    ports:
+      - "9411:9411"
+
+  backend:
+    build:
+      context: ./backend
+      args:
+        BUILDER_IMAGE: ${BACKEND_BUILDER_IMAGE:-maven:3.9.9-eclipse-temurin-17}
+        RUNTIME_IMAGE: ${BACKEND_RUNTIME_IMAGE:-eclipse-temurin:17-jre}
+    environment:
+      SPRING_R2DBC_URL: r2dbc:mysql://mysql:3306/go_ai
+      SPRING_R2DBC_USERNAME: goai
+      SPRING_R2DBC_PASSWORD: goai123
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_ZIPKIN_BASE_URL: http://zipkin:9411
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      JWT_SECRET: ${JWT_SECRET:-0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef}
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      zipkin:
+        condition: service_started
+    ports:
+      - "8080:8080"
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        NODE_IMAGE: ${FRONTEND_NODE_IMAGE:-node:22-alpine}
+        NGINX_IMAGE: ${FRONTEND_NGINX_IMAGE:-nginx:1.27-alpine}
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+
+  prometheus:
+    image: ${PROMETHEUS_IMAGE:-prom/prometheus:v2.54.1}
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+    volumes:
+      - ./deploy/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"
+
+  grafana:
+    image: ${GRAFANA_IMAGE:-grafana/grafana:11.2.0}
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_DEFAULT_LANGUAGE: zh-Hans
+    depends_on:
+      - prometheus
