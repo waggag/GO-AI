@@ -1,10 +1,12 @@
 package com.goaiplatform.backend.controller;
 
 import com.goaiplatform.backend.dto.ApiKeyDtos;
+import com.goaiplatform.backend.security.JwtUserAuthentication;
 import com.goaiplatform.backend.service.ApiKeyManagementService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,6 +15,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Mono;
 
 @RestController
@@ -62,6 +65,9 @@ public class ApiKeyController {
     }
 
     private Long toUserId(Authentication authentication) {
-        return Math.abs((long) authentication.getName().hashCode());
+        if (authentication instanceof JwtUserAuthentication jwtAuth) {
+            return jwtAuth.getUserId();
+        }
+        throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "无效的认证信息");
     }
 }

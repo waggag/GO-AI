@@ -20,6 +20,63 @@
 - JWT 用户认证与权限控制
 - 会话管理、主题切换、国际化、Markdown 渲染与代码高亮
 - 敏感词过滤与请求限流
+- API Key 安全加密存储与指纹校验
+- 对话使用统计与趋势分析
+- 会话导出（JSON / Markdown 格式）
+
+## 项目结构
+
+```
+GO-AI/
+├── backend/                    # Spring Boot WebFlux 后端
+│   └── src/
+│       ├── main/java/
+│       │   └── com/goaiplatform/backend/
+│       │       ├── controller/    # REST 控制器（Auth, Chat, ApiKey）
+│       │       ├── service/       # 业务逻辑（9个服务类）
+│       │       ├── domain/        # 实体类（User, Conversation, Message, ApiKey）
+│       │       ├── dto/           # 请求/响应 DTO（record 风格）
+│       │       ├── repository/    # Spring Data R2DBC 接口
+│       │       ├── security/      # JWT 认证相关
+│       │       ├── ai/            # AI 厂商客户端接口与实现
+│       │       └── config/        # 配置类
+│       ├── test/java/             # 单元测试（6个测试类）
+│       └── main/resources/application.yml
+│
+└── frontend/                   # Vue 3 前端
+    └── src/
+        ├── stores/               # Pinia 状态管理（auth, chat）
+        ├── components/           # Vue SFC 组件（AuthScreen, MarkdownMessage）
+        ├── api.ts                # Axios API 客户端
+        ├── types.ts              # TypeScript 类型定义
+        ├── utils.ts              # 工具函数
+        ├── styles.css            # 全局样式系统
+        ├── App.vue               # 主应用组件
+        └── main.ts               # 入口文件
+```
+
+## API 端点
+
+### 认证（Auth）
+- `POST /api/auth/register` — 用户注册
+- `POST /api/auth/login` — 用户登录
+
+### 对话（Chat）
+- `POST /api/chat/conversations` — 创建会话
+- `GET /api/chat/conversations` — 会话列表
+- `GET /api/chat/conversations/{id}` — 会话详情
+- `GET /api/chat/conversations/{id}/export` — 导出 JSON
+- `GET /api/chat/conversations/{id}/export.md` — 导出 Markdown
+- `GET /api/chat/stats` — 使用统计
+- `GET /api/chat/stats/trend` — 使用趋势
+- `POST /api/chat/stream` — SSE 流式对话
+
+### API Key 管理
+- `POST /api/api-keys/save` — 保存 API Key
+- `GET /api/api-keys/list` — Key 列表
+- `DELETE /api/api-keys/{id}` — 删除 Key
+- `POST /api/api-keys/validate/{provider}` — 校验 Key
+- `POST /api/api-keys/rotate` — 轮换 Key
 
 ## 本地启动
 
@@ -88,6 +145,13 @@ cd backend
 mvn -B clean verify
 ```
 
+## 已知问题
+
+1. **AI 厂商实现不完整**：当前仅实现 OpenAI 和小米 MiLM，其他厂商（通义千问、文心一言、星火、Claude、Gemini）为占位符
+2. **用户 ID 提取逻辑不一致**：ApiKeyController 使用 hashCode() 生成用户 ID，与 AuthService 的真实用户 ID 不一致
+3. **敏感词测试编码问题**：SensitiveWordServiceTest 在某些环境下编码导致断言失败
+4. **Testcontainers 依赖 Docker**：部分集成测试需要 Docker 环境
+
 ## 压测建议
 
 基于 k6 或 JMeter 对 `/api/chat/stream` 进行并发压测，建议配置：
@@ -98,3 +162,15 @@ mvn -B clean verify
 ## 演示地址
 
 - 线上演示地址：待部署后填入（建议 Vercel + Render / ECS）
+
+## 贡献指南
+
+1. Fork 仓库
+2. 创建功能分支：`git checkout -b feature/your-feature`
+3. 提交更改：`git commit -m 'Add your feature'`
+4. 推送分支：`git push origin feature/your-feature`
+5. 创建 Pull Request
+
+## 许可证
+
+[待补充]
