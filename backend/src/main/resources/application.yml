@@ -32,7 +32,7 @@ management:
       probability: 1.0
 
 jwt:
-  secret: ${JWT_SECRET:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef}
+  secret: ${JWT_SECRET:?Please set JWT_SECRET environment variable}
   expiration-minutes: 120
 
 rate-limit:
@@ -44,7 +44,7 @@ rate-limit:
   stream-refill-duration-seconds: 1
 
 app:
-  api-key-encryption-secret: ${API_KEY_ENCRYPTION_SECRET:go-ai-default-secret-change-me}
+  api-key-encryption-secret: ${API_KEY_ENCRYPTION_SECRET:?Please set API_KEY_ENCRYPTION_SECRET environment variable}
   sensitive-words:
     - 赌博
     - 暴恐

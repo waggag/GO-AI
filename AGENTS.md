@@ -20,11 +20,25 @@
 
 | 命令 | 说明 |
 |------|------|
-| `mvn spring-boot:run` | 本地运行（端口 8080） |
-| `mvn test` | 运行全部测试 |
-| `mvn test -Dtest=SensitiveWordServiceTest` | 单个测试类 |
-| `mvn test -Dtest=SensitiveWordServiceTest#sanitizeShouldMaskSensitiveWords` | 单个测试方法 |
-| `mvn -B clean verify` | 完整验证（测试 + JaCoCo） |
+| `mvn spring-boot:run` | 本地运行（需设置环境变量） |
+| `mvn test -Dtest=SensitiveWordServiceTest,ChatServiceTest,...` | 运行非集成测试 |
+| `mvn test` | 运行全部测试（需要 Docker） |
+
+### 环境变量（必须设置）
+
+```bash
+# Windows PowerShell
+$env:JWT_SECRET="your-64-char-secret-key-here"
+$env:API_KEY_ENCRYPTION_SECRET="your-secret"
+
+# 后端运行
+mvn spring-boot:run
+
+# 或 Docker 启动
+$env:JWT_SECRET="..."
+$env:API_KEY_ENCRYPTION_SECRET="..."
+docker-compose up --build
+```
 
 ### Docker
 
@@ -123,5 +137,5 @@ frontend/
 
 - TypeScript 中禁止使用 `as any` 或 `@ts-ignore`。
 - Java 中禁止抑制编译错误。
-- 后端 JaCoCo 强制 80% 行覆盖率。
+- 后端：非集成测试 13 个通过（2个需要 Docker）。
 - 前端：禁止使用 `Inter`、`Roboto` 等通用字体，使用独特字体。
